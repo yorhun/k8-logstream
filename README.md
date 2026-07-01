@@ -84,7 +84,7 @@ Once `http://localhost:5601` is open:
    File: `k8s/monitoring/dashboards/logstream-opensearch.ndjson`  
    Choose *Automatically overwrite conflicts* if re-importing.
 
-The **Logstream** dashboard then appears under Dashboards with 6 panels:
+The **Logstream** dashboard then appears under Dashboards with these panels:
 
 | Panel | What it shows |
 |-------|--------------|
