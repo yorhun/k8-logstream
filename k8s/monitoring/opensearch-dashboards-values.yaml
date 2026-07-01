@@ -1,0 +1,21 @@
+# OpenSearch Dashboards — UI for searching and visualising log indices.
+# Points at the opensearch Service in the same namespace.
+opensearchHosts: "https://opensearch-cluster-master.logstream.svc:9200"
+
+replicaCount: 1
+
+config:
+  opensearch_dashboards.yml: |
+    server.host: "0.0.0.0"
+    opensearch.hosts: ["https://opensearch-cluster-master.logstream.svc:9200"]
+    opensearch.username: "admin"
+    opensearch.password: "CHANGE_ME"
+    opensearch.ssl.verificationMode: none
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi

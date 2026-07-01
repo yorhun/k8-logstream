@@ -1,0 +1,24 @@
+# Single-node OpenSearch for local development.
+singleNode: true
+
+clusterName: "opensearch"
+
+extraEnvs:
+  - name: OPENSEARCH_INITIAL_ADMIN_PASSWORD
+    value: "CHANGE_ME"
+
+
+# JVM heap — half of memory limit is the recommended ratio
+opensearchJavaOpts: "-Xms512m -Xmx512m"
+
+resources:
+  requests:
+    cpu: 500m
+    memory: 512Mi
+  limits:
+    cpu: "1"
+    memory: 1Gi
+
+# No persistent volume — indices are ephemeral (fine for local dev)
+persistence:
+  enabled: false

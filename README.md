@@ -1,0 +1,103 @@
+# Log Stream Analyzer Demo
+
+A Kubernetes project that processes streaming logs by using horizontally autoscaling pods. Indexes the data into OpenSearch Dashboards. The log stream is made up of mock data produced by a separate pod in the cluster.
+
+<video src="/docs/k8-logstream-opensearch.mp4"></video>
+
+## Prerequisites
+
+| Tool | Purpose |
+|------|---------|
+| [OrbStack](https://orbstack.dev) with K8s enabled | Local cluster |
+| `helm` v3+ | Bitnami + OpenSearch charts |
+| `docker` | Build service images |
+| `kubectl` | Apply manifests |
+
+## Quickstart
+
+```bash
+# 1. Enable OrbStack Kubernetes (OrbStack app → Settings → Kubernetes → Enable)
+#    Then confirm:
+kubectl config current-context   # should print: orbstack
+
+# 2. Add Helm repos (one-time)
+make helm-repos
+
+# 3. Deploy Redis
+make deploy-infra
+
+# 4. Build the Python service images locally
+#    (OrbStack shares Docker daemon — no registry push needed)
+make build
+
+# 5. Deploy K8s manifests for generator + processor
+make deploy-services
+
+# 6. Deploy OpenSearch + OpenSearch Dashboards
+#    OpenSearch takes ~60s to become healthy on first start
+make deploy-monitoring
+
+# 7. Port-forward Dashboards to localhost
+make port-forward
+# OpenSearch Dashboards → http://localhost:5601
+```
+
+## Configuration
+
+Before deploying, set a password for the local OpenSearch admin account.
+Replace `CHANGE_ME` in these three files with the same password value:
+
+| File | Key |
+|------|-----|
+| `k8s/monitoring/opensearch-values.yaml` | `OPENSEARCH_INITIAL_ADMIN_PASSWORD` |
+| `k8s/monitoring/opensearch-dashboards-values.yaml` | `opensearch.password` |
+| `k8s/log-processor/secret.yaml.example` | `OPENSEARCH_URL` (embedded in the URL) -> Rename as `secret.yaml` |
+
+## Verification
+
+```bash
+# All pods Running?
+kubectl get pods -n logstream
+
+# Messages accumulating in the stream?
+kubectl exec -n logstream redis-master-0 -- redis-cli XLEN logs:raw
+
+# Dedup set growing?
+kubectl exec -n logstream redis-master-0 -- redis-cli SCARD logs:processed
+
+# Documents indexed in OpenSearch? (replace date as needed)
+kubectl exec -n logstream -it deploy/opensearch -- curl -s \
+  'http://localhost:9200/logs-*/_count' | python3 -m json.tool
+
+# HPA status
+kubectl get hpa -n logstream -w
+```
+
+## Importing the Dashboard
+
+Once `http://localhost:5601` is open:
+
+1. **Create the index pattern first** — OpenSearch Dashboards → Stack Management → Index Patterns → Create  
+   Pattern: `logs-*` | Time field: `@timestamp`
+
+2. **Import saved objects** — Stack Management → Saved Objects → Import  
+   File: `k8s/monitoring/dashboards/logstream-opensearch.ndjson`  
+   Choose *Automatically overwrite conflicts* if re-importing.
+
+The **Logstream** dashboard then appears under Dashboards with 6 panels:
+
+| Panel | What it shows |
+|-------|--------------|
+| Log Explorer | Full-text search across `message`, `trace_id`, any field |
+| Log Volume over Time | Documents/min — traffic spikes visible instantly |
+| Level Distribution | DEBUG/INFO/WARNING/ERROR/CRITICAL pie |
+| Top Services by Volume | Which `service` values generate the most logs |
+| Top Error Messages | Recurring ERROR/CRITICAL messages ranked by frequency |
+| Active Processor Pod Count | Number of Pods (Autoscaling Processor Pods) |
+| Processed Messages | Count of processed messages |
+
+## Improvement Ideas
+
+- Add TTL to processed logs set
+- Use event-driven autoscaling instead of CPU-based
+- Add a dead-letter queue for messages that fail to index

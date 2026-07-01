@@ -1,0 +1,15 @@
+# Bitnami Redis — single master, no auth, no persistence (dev)
+architecture: standalone
+
+auth:
+  enabled: false
+
+master:
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      memory: 256Mi
+  persistence:
+    enabled: false
