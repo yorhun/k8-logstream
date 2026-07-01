@@ -2,7 +2,7 @@
 
 A Kubernetes project that processes streaming logs by using horizontally autoscaling pods. Indexes the data into OpenSearch Dashboards. The log stream is made up of mock data produced by a separate pod in the cluster.
 
-<video src="/docs/k8-logstream-opensearch.mp4"></video>
+<video src="https://github.com/user-attachments/assets/60610006-a5de-4634-8c9c-90045cb858f3"></video>
 
 ## Prerequisites
 
