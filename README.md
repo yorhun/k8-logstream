@@ -2,7 +2,7 @@
 
 A Kubernetes project that processes streaming logs by using horizontally autoscaling pods. Indexes the data into OpenSearch Dashboards. The log stream is made up of mock data produced by a separate pod in the cluster.
 
-<video src="https://github.com/user-attachments/assets/60610006-a5de-4634-8c9c-90045cb858f3"></video>
+<video src="https://github.com/user-attachments/assets/cac865b9-09e1-4fee-ad78-272424f86429"></video>
 
 ## Prerequisites
 
@@ -14,6 +14,8 @@ A Kubernetes project that processes streaming logs by using horizontally autosca
 | `kubectl` | Apply manifests |
 
 ## Quickstart
+
+### Setup
 
 ```bash
 # 1. Enable OrbStack Kubernetes (OrbStack app → Settings → Kubernetes → Enable)
@@ -29,20 +31,9 @@ make deploy-infra
 # 4. Build the Python service images locally
 #    (OrbStack shares Docker daemon — no registry push needed)
 make build
-
-# 5. Deploy K8s manifests for generator + processor
-make deploy-services
-
-# 6. Deploy OpenSearch + OpenSearch Dashboards
-#    OpenSearch takes ~60s to become healthy on first start
-make deploy-monitoring
-
-# 7. Port-forward Dashboards to localhost
-make port-forward
-# OpenSearch Dashboards → http://localhost:5601
 ```
 
-## Configuration
+### Configuration
 
 Before deploying, set a password for the local OpenSearch admin account.
 Replace `CHANGE_ME` in these three files with the same password value:
@@ -52,6 +43,23 @@ Replace `CHANGE_ME` in these three files with the same password value:
 | `k8s/monitoring/opensearch-values.yaml` | `OPENSEARCH_INITIAL_ADMIN_PASSWORD` |
 | `k8s/monitoring/opensearch-dashboards-values.yaml` | `opensearch.password` |
 | `k8s/log-processor/secret.yaml.example` | `OPENSEARCH_URL` (embedded in the URL) -> Rename as `secret.yaml` |
+
+### Deploy
+
+```
+# 1. Deploy K8s manifests for generator + processor
+make deploy-services
+
+# 2. Deploy OpenSearch + OpenSearch Dashboards
+#    OpenSearch takes ~60s to become healthy on first start
+make deploy-monitoring
+
+# 3. Port-forward Dashboards to localhost
+make port-forward
+# OpenSearch Dashboards → http://localhost:5601
+```
+
+
 
 ## Verification
 
@@ -65,10 +73,6 @@ kubectl exec -n logstream redis-master-0 -- redis-cli XLEN logs:raw
 # Dedup set growing?
 kubectl exec -n logstream redis-master-0 -- redis-cli SCARD logs:processed
 
-# Documents indexed in OpenSearch? (replace date as needed)
-kubectl exec -n logstream -it deploy/opensearch -- curl -s \
-  'http://localhost:9200/logs-*/_count' | python3 -m json.tool
-
 # HPA status
 kubectl get hpa -n logstream -w
 ```
@@ -77,10 +81,7 @@ kubectl get hpa -n logstream -w
 
 Once `http://localhost:5601` is open:
 
-1. **Create the index pattern first** — OpenSearch Dashboards → Stack Management → Index Patterns → Create  
-   Pattern: `logs-*` | Time field: `@timestamp`
-
-2. **Import saved objects** — Stack Management → Saved Objects → Import  
+1. **Import saved objects** — Stack Management → Saved Objects → Import  
    File: `k8s/monitoring/dashboards/logstream-opensearch.ndjson`  
    Choose *Automatically overwrite conflicts* if re-importing.
 
