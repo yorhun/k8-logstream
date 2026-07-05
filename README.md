@@ -46,7 +46,7 @@ Replace `CHANGE_ME` in these three files with the same password value:
 
 ### Deploy
 
-```
+```bash
 # 1. Deploy K8s manifests for generator + processor
 make deploy-services
 
@@ -81,7 +81,7 @@ kubectl get hpa -n logstream -w
 
 Once `http://localhost:5601` is open:
 
-1. **Import saved objects** — Stack Management → Saved Objects → Import  
+   **Import saved objects** — Stack Management → Saved Objects → Import  
    File: `k8s/monitoring/dashboards/logstream-opensearch.ndjson`  
    Choose *Automatically overwrite conflicts* if re-importing.
 
